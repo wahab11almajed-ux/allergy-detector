@@ -35,9 +35,9 @@ if camera_image:
             """
             
             response = client.models.generate_content(
-                model='gemini-2.5-flash',
-                contents=[image, prompt]
-            )
+    model='gemini-3.8-flash',
+    contents=[image, prompt]
+)
             
             st.markdown("### 📋 نتيجة التحليل:")
             st.write(response.text)
