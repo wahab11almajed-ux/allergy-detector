@@ -13,40 +13,50 @@ cafeteria_items = {
 }
 
 st.title("🛡️ كاشف المواد الحساسة")
-st.write("صور باركود المنتج بالمقصف للتحقق من المكونات.")
 
 allergy_options = ["فراولة", "شوكولاتة", "ألبان", "مكسرات", "سكر"]
 user_allergies = st.sidebar.multiselect("حدد المواد الممنوعة:", allergy_options, default=["فراولة", "شوكولاتة"])
 
 st.divider()
 
-camera_image = st.camera_input("📸 تصوير باركود المنتج")
+# الطريقة الأولى: الكاميرا
+st.subheader("📸 تصوير الباركود")
+camera_image = st.camera_input("صور الباركود")
 
 if camera_image:
     bytes_data = camera_image.getvalue()
     cv_img = cv2.imdecode(np.frombuffer(bytes_data, np.uint8), cv2.IMREAD_COLOR)
-    
     detected_barcodes = decode(cv_img)
     
     if detected_barcodes:
         for barcode in detected_barcodes:
             barcode_data = barcode.data.decode('utf-8')
-            st.success(f"تم قراءة الباركود: {barcode_data}")
-            
             if barcode_data in cafeteria_items:
                 item = cafeteria_items[barcode_data]
-                st.write(f"**المنتج:** {item['الاسم']}")
-                st.write(f"**المكونات:** {', '.join(item['المكونات'])}")
-                
+                st.success(f"المنتج: {item['الاسم']}")
+                st.write(f"المكونات: {', '.join(item['المكونات'])}")
                 matched = [a for a in user_allergies if a in item["الفئات"]]
                 if matched:
-                    st.error(f"🚨 تحذير! المنتج يحتوي على: {', '.join(matched)}")
+                    st.error(f"🚨 تحذير! يحتوي على: {', '.join(matched)}")
                 else:
-                    st.success("✅ المنتج آمن.")
+                    st.success("✅ آمن.")
             else:
-                st.warning(f"⚠️ الباركود ({barcode_data}) غير مسجل.")
+                st.warning(f"⚠️ باركود غير مسجل: {barcode_data}")
     else:
-        st.warning("⚠️ لم يتم العثور على باركود واضح.")
+        st.warning("⚠️ ما لقيت باركود واضح. استخدم البحث السريع بالأسفل 👇")
 
 st.divider()
-selected_name = st.selectbox("أو اختر المنتج يدويًا:", [item["الاسم"] for item in cafeteria_items.values()])
+
+# الطريقة الثانية: بحث سريع يفك الحشرة
+st.subheader("⚡ بحث سريع بالاسم (بدون كاميرا)")
+item_names = [item["الاسم"] for item in cafeteria_items.values()]
+selected_name = st.selectbox("اختر المنتج:", item_names)
+
+for code, item in cafeteria_items.items():
+    if item["الاسم"] == selected_name:
+        st.write(f"**المكونات:** {', '.join(item['المكونات'])}")
+        matched = [a for a in user_allergies if a in item["الفئات"]]
+        if matched:
+            st.error(f"🚨 تحذير! يحتوي على: {', '.join(matched)}")
+        else:
+            st.success("✅ آمن.")
